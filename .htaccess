@@ -1,0 +1,41 @@
+<IfModule mod_rewrite.c>
+    Options +FollowSymLinks
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Allow access to specific utility scripts in root
+    RewriteCond %{REQUEST_URI} ^/(reset|test|test2|upload)\\.php$ [NC]
+    RewriteRule .* - [L]
+
+    # Allow direct access to symlinked storage files (e.g., videos/images)
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_URI} ^/storage/
+    RewriteRule ^ - [L]
+
+    # Serve build assets directly
+    RewriteRule ^build/(.*)$ public/build/$1 [L]
+
+    # Redirect everything else to /public
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L]
+
+    # Preserve Authorization header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Clean trailing slash (if not directory)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Let Laravel handle everything else
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
